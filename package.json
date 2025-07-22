@@ -1,0 +1,44 @@
+{
+  "name": "fouter",
+  "version": "0.0.1",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc && fockbuilder"
+  },
+  "files": [
+    "./**/*.js",
+    "./**/*.js.map",
+    "./**/*.d.ts",
+    "./**/*.d.ts.map",
+    "./**/*.json",
+    "!./**/test/",
+    "LICENSE",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FOCKUSTY/fouter.git"
+  },
+  "author": {
+    "name": "FOCKUSTY",
+    "email": "viserd.yt@gmail.com",
+    "url": "https://fockusty.netlify.app"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/FOCKUSTY/fouter/issues"
+  },
+  "homepage": "https://github.com/FOCKUSTY/fouter#readme",
+  "description": "",
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.1.0",
+    "fock-builder": "^2.1.0-beta.1",
+    "mocha": "^11.7.1",
+    "ts-mocha": "^11.1.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.3"
+  }
+}
