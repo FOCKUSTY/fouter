@@ -1,0 +1,27 @@
+GET / -> someType
+  query:
+    length=number
+    offset=number
+  body: someType2
+  headers: token=string
+
+### ALL ROUTES COMPILING TO ONE FILE
+### CONVERTS TO TYPESCRIPT:
+### EXAMPLE
+```ts
+type Router = {
+  "GET some-path/": {
+    "GET /": {
+      return: someType
+      path: "/",
+
+      query?: {
+        length?: number,
+        offset?: number
+      },
+      body: someType2,
+      headers: { token: string }
+    }
+  }
+}
+```
