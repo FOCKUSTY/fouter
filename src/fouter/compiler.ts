@@ -9,8 +9,8 @@ export class Compiler {
   private readonly _file_manager: FileManager;
 
   public constructor(
-    public readonly path: string,
-    public readonly output: string,
+    public readonly inputDir: string,
+    public readonly outputFile: string,
 
     /**
      * This variable uses to write into file and do not overwrite it
@@ -33,7 +33,7 @@ export class Compiler {
      */
     public readonly replace: boolean = false
   ) {
-    this._file_manager = new FileManager(path);
+    this._file_manager = new FileManager(inputDir);
   };
 
   public execute() {
@@ -53,9 +53,9 @@ export class Compiler {
     const string = COMPILED_OVERWRRITE_TEXT + "\n\ntype Routes = " + routes.map(route => this.ResolveRoute(route)).join("\n\n") + "\n\n" + COMPILED_OVERWRRITE_TEXT;
     
     if (this.replace) {
-      FileManager.writeFile(string, this.output);
+      FileManager.writeFile(string, this.outputFile);
     } else {
-      FileManager.writeFile(FileManager.readFile(this.output).replaceAll(COMPILED_OVERWRITE_TEXT_REGEXP, string).replaceAll(OVERWRRITE_TEXT, string), this.output);
+      FileManager.writeFile(FileManager.readFile(this.outputFile).replaceAll(COMPILED_OVERWRITE_TEXT_REGEXP, string).replaceAll(OVERWRRITE_TEXT, string), this.output);
     }
   }
 
