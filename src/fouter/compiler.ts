@@ -1,3 +1,4 @@
+import { existsSync } from "fs";
 import { ARGUMENT, ARGUMENT_DATA, FOUTER } from "./constants";
 import FileManager from "./file.manager";
 
@@ -52,10 +53,10 @@ export class Compiler {
   ) {
     const string = COMPILED_OVERWRRITE_TEXT + "\n\ntype Routes = " + routes.map(route => this.ResolveRoute(route)).join("\n\n") + "\n\n" + COMPILED_OVERWRRITE_TEXT;
     
-    if (this.replace) {
+    if (this.replace || (!existsSync(this.outputFile)) || FileManager.readFile(this.outputFile) === "") {
       FileManager.writeFile(string, this.outputFile);
     } else {
-      FileManager.writeFile(FileManager.readFile(this.outputFile).replaceAll(COMPILED_OVERWRITE_TEXT_REGEXP, string).replaceAll(OVERWRRITE_TEXT, string), this.output);
+      FileManager.writeFile(FileManager.readFile(this.outputFile).replaceAll(COMPILED_OVERWRITE_TEXT_REGEXP, string).replaceAll(OVERWRRITE_TEXT, string), this.outputFile);
     }
   }
 
