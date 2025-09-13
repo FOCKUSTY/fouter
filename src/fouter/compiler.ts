@@ -13,7 +13,7 @@ type Route = Record<string, {
   method: string,
   path: string,
   return: string,
-  arguments: { [key: string]: { [key: string]: string } }
+  arguments: { [key: string]: { [key: string]: string }|string }
 }>;
 
 export class Compiler {
@@ -94,7 +94,16 @@ export class Compiler {
   }
 
   private ResolveArgumentData(argument: string) {
-    return Object.fromEntries(argument.split("\r\n").map(data => {
+    const data = argument.split(/\s+/g);
+   
+    const matched = data[1].match(ARGUMENT_DATA)
+    const isShort = data.length === 2 && matched;
+
+    if (isShort) {
+      return matched[2]
+    }
+
+    return Object.fromEntries(data.map(data => {
       const dataMatched = data.match(ARGUMENT_DATA);
 
       if (!dataMatched) {
@@ -108,22 +117,35 @@ export class Compiler {
   }
 
   private ResolveArguments(args: string[]) {
-    return Object.fromEntries(args.map(argument => {
-      if (!argument) {
-        return []
-      };
+    const additionObject: Route[string]["arguments"] = {
+      "query?": "{[key: string]: string}|undefined|null",
+      "body?": "{[key: sring]: string}|undefined|null",
+      "headers?": "{[key: string]: string}|undefined|null",
+    };
 
-      const argumentMatched = argument.match(ARGUMENT);
-      
-      if (!argumentMatched) {
-        return [];
-      };
-      
-      const argumentType = argumentMatched[1];
-      const argumentData = this.ResolveArgumentData(argument);
+    return {
+      ...Object.fromEntries(args.map(argument => {
+        if (!argument) {
+          return []
+        };
 
-      return [argumentType, argumentData] as const
-    }).filter(v => v.length !== 0)) as { [key: string]: { [key: string]: string }};
+        const argumentMatched = argument.match(ARGUMENT);
+        
+        if (!argumentMatched) {
+          return [];
+        };
+        
+        const argumentType = argumentMatched[1];
+        const argumentData = this.ResolveArgumentData(argument);
+
+        delete additionObject[argumentType + "?"];
+
+        return typeof argumentData === "string"
+          ? this.ResolvePartial(argumentType, argumentData)
+          : [argumentType, argumentData] as const
+      }).filter(v => v.length !== 0)) as Route[string]["arguments"],
+      ...additionObject
+    };
   };
 
   private ResolveFile(file: string, filePath: string) {

@@ -12,11 +12,8 @@ type Routes = {
         offset: number
       },
 
-      body: {},
-
-      headers: {
-        token: string
-      }
+      body?: null,
+      headers?: {[key: string]: string}|undefined|null
     }
   }
 }
