@@ -5,10 +5,10 @@ type Routes = {
     method: "GET",
     path: "/",
     parent: "some-path",
-    return: someType,
+    return?: someType,
     arguments: {
       query: {
-        length: number,
+        length?: number,
         offset: number
       },
 

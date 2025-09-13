@@ -81,11 +81,13 @@ export class Compiler {
 
   private ResolveRoute(route: Route) {
     return Object.fromEntries(Object.values(route).filter(data => !!data).map(data => {
+      const returnData = this.ResolvePartial("return", data.return);
+
       return [`'${data.method + " " + data.file + data.path}'`, {
         method: `'${data.method}'`,
         path: `'${data.path}'`,
         parent: `'${data.parent}'`,
-        return: data.return,
+        [returnData[0]]: returnData[1],
         arguments: data.arguments
       }];
     }));
@@ -101,7 +103,7 @@ export class Compiler {
 
       const [ _main, dataName, dataType ] = dataMatched;
 
-      return [dataName, dataType] as const;
+      return this.ResolvePartial(dataName, dataType);
     }).filter(v => v.length !== 0)) as { [key: string]: string };
   }
 
@@ -119,7 +121,7 @@ export class Compiler {
       
       const argumentType = argumentMatched[1];
       const argumentData = this.ResolveArgumentData(argument);
-      
+
       return [argumentType, argumentData] as const
     }).filter(v => v.length !== 0)) as { [key: string]: { [key: string]: string }};
   };
@@ -164,6 +166,12 @@ export class Compiler {
   private ReadFiles() {
     return this._file_manager.files.map(file =>
       [FileManager.readFile(this._file_manager.resolvePath(file)), file] as const);
+  }
+
+  private ResolvePartial(name: string, maybePartial: string) {
+    return maybePartial.endsWith("?")
+      ? [name + "?", maybePartial.slice(0, maybePartial.length-1)] as const
+      : [name, maybePartial] as const;
   }
 };
 

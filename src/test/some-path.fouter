@@ -1,6 +1,6 @@
-GET / -> [someType]
+GET / -> [someType?]
   query:
-    length=[number]
+    length=[number?]
     offset=[number]
   body: [null]
   headers: token=[string]
