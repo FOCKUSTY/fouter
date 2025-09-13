@@ -47,13 +47,18 @@ export class Compiler {
     this._file_manager = new FileManager(inputDir);
   };
 
-  public execute() {
-    this.Write(this.ReadFiles().map(file => this.ResolveFile(...file)));
+  public execute(write: boolean = true) {
+    const output = this.ReadFiles().map(file => this.ResolveFile(...file));
+    
+    if (write) {
+      this.Write(output);
+    }
+
+    return output;
   }
 
   private Write(routes: Route[]) {
-    const resolvedRoutes = routes.map(route => this.ResolveRoute(route)).reduce((previousRoute, currentRoute) => Object.assign(previousRoute, currentRoute));
-    const parsedRoutes = JSON.stringify(resolvedRoutes, undefined, 2).replaceAll("\"", "").replaceAll("'", "\"").replaceAll("},\n", "},\n\n");
+    const parsedRoutes = JSON.stringify(this.ResolveRoutes(routes), undefined, 2).replaceAll("\"", "").replaceAll("'", "\"").replaceAll("},\n", "},\n\n");
     const string = COMPILED_OVERWRRITE_TEXT + "\n\ntype Routes = " + parsedRoutes + "\n\n" + COMPILED_OVERWRRITE_TEXT;
     
     if (this.replace || (!existsSync(this.outputFile)) || FileManager.readFile(this.outputFile) === "") {
@@ -68,6 +73,10 @@ export class Compiler {
           this.outputFile
         );
     }
+  }
+
+  private ResolveRoutes(routes: Route[]) {
+    return routes.map(route => this.ResolveRoute(route)).reduce((previous, current) => Object.assign(previous, current));
   }
 
   private ResolveRoute(route: Route) {

@@ -5,7 +5,7 @@
   "types": "index.d.ts",
   "scripts": {
     "build": "tsc && fockbuilder",
-    "test": "echo none"
+    "test": "ts-node ./src/test/index.ts"
   },
   "files": [
     "./**/*.js",
