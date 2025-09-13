@@ -8,7 +8,6 @@ const COMPILED_OVERWRRITE_TEXT_FOR_REGEXP = `\\/\\/ FOUTER__COMPILED__OVERWRITE_
 const COMPILED_OVERWRITE_TEXT_REGEXP = new RegExp(`${COMPILED_OVERWRRITE_TEXT_FOR_REGEXP}\\s*([\\w\\W]*)\\s*${COMPILED_OVERWRRITE_TEXT_FOR_REGEXP}`, "gi")
 
 type Route = Record<string, {
-  file: string,
   parent: string,
   method: string,
   path: string,
@@ -54,25 +53,36 @@ export class Compiler {
       this.Write(output);
     }
 
-    return output;
+    return output.flatMap(route => Object.values(route));
+  }
+
+  public write(wrap: boolean = true) {
+    return (data: string) => {
+      const raw = wrap
+        ? COMPILED_OVERWRRITE_TEXT + "\n\ntype Routes = " + data + "\n\n" + COMPILED_OVERWRRITE_TEXT
+        : data
+      
+      let file = raw;
+
+      if (this.replace || (!existsSync(this.outputFile)) || FileManager.readFile(this.outputFile) === "") {
+        FileManager.writeFile(raw, this.outputFile);
+      } else {
+        file = FileManager
+          .readFile(this.outputFile)
+          .replaceAll(COMPILED_OVERWRITE_TEXT_REGEXP, raw)
+          .replaceAll(OVERWRRITE_TEXT, raw);
+        
+        FileManager.writeFile(file, this.outputFile);
+      }
+
+      return { file, raw };
+    };
   }
 
   private Write(routes: Route[]) {
     const parsedRoutes = JSON.stringify(this.ResolveRoutes(routes), undefined, 2).replaceAll("\"", "").replaceAll("'", "\"").replaceAll("},\n", "},\n\n");
-    const string = COMPILED_OVERWRRITE_TEXT + "\n\ntype Routes = " + parsedRoutes + "\n\n" + COMPILED_OVERWRRITE_TEXT;
-    
-    if (this.replace || (!existsSync(this.outputFile)) || FileManager.readFile(this.outputFile) === "") {
-      FileManager.writeFile(string, this.outputFile);
-    } else {
-      FileManager
-        .writeFile(
-          FileManager
-            .readFile(this.outputFile)
-            .replaceAll(COMPILED_OVERWRITE_TEXT_REGEXP, string)
-            .replaceAll(OVERWRRITE_TEXT, string),
-          this.outputFile
-        );
-    }
+
+    return this.write()(parsedRoutes);
   }
 
   private ResolveRoutes(routes: Route[]) {
@@ -83,7 +93,7 @@ export class Compiler {
     return Object.fromEntries(Object.values(route).filter(data => !!data).map(data => {
       const returnData = this.ResolvePartial("return", data.return);
 
-      return [`'${data.method + " " + data.file + data.path}'`, {
+      return [`'${data.method + " " + data.parent + data.path}'`, {
         method: `'${data.method}'`,
         path: `'${data.path}'`,
         parent: `'${data.parent}'`,
@@ -175,7 +185,6 @@ export class Compiler {
       const file = FileManager.getFileName(filePath);
 
       return [`${method} ${path}`, {
-        file,
         method,
         path,
         parent: file,

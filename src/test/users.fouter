@@ -1,0 +1,14 @@
+GET / -> [Response]
+  query: cache=[boolean]
+
+GET /:slug -> [Response]
+  query: cache=[boolean]
+
+PUT /:slug -> [Response]
+  body: [Partial<{id: string}>]
+  headers: token=[string]
+  query:
+    cache=[boolean]
+
+DELETE /:slug -> [Response]
+  headers: token=[string]
