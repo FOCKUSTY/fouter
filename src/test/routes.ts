@@ -5,7 +5,8 @@ type Routes = {
     method: "GET",
     path: "/",
     parent: "some-path",
-    return?: someType,
+    return?: {id: string, name: string},
+
     arguments: {
       query: {
         length?: number,
@@ -24,7 +25,7 @@ type Routes = {
     return: Response,
     arguments: {
       query: boolean,
-      body?: {[key: sring]: string}|undefined|null,
+      body?: {[key: string]: string}|undefined|null,
       headers?: {[key: string]: string}|undefined|null
     }
   },
@@ -36,7 +37,7 @@ type Routes = {
     return: Response,
     arguments: {
       query: boolean,
-      body?: {[key: sring]: string}|undefined|null,
+      body?: {[key: string]: string}|undefined|null,
       headers?: {[key: string]: string}|undefined|null
     }
   },
@@ -62,7 +63,7 @@ type Routes = {
     arguments: {
       headers: string,
       query?: {[key: string]: string}|undefined|null,
-      body?: {[key: sring]: string}|undefined|null
+      body?: {[key: string]: string}|undefined|null
     }
   }
 }

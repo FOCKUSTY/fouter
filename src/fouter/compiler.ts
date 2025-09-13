@@ -129,7 +129,7 @@ export class Compiler {
   private ResolveArguments(args: string[]) {
     const additionObject: Route[string]["arguments"] = {
       "query?": "{[key: string]: string}|undefined|null",
-      "body?": "{[key: sring]: string}|undefined|null",
+      "body?": "{[key: string]: string}|undefined|null",
       "headers?": "{[key: string]: string}|undefined|null",
     };
 
