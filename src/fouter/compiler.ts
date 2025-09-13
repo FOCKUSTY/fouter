@@ -4,7 +4,17 @@ import FileManager from "./file.manager";
 
 const OVERWRRITE_TEXT = `// FOUTER__OVERWRITE_THIS \\\\`;
 const COMPILED_OVERWRRITE_TEXT = `// FOUTER__COMPILED__OVERWRITE_THIS \\\\`;
-const COMPILED_OVERWRITE_TEXT_REGEXP = new RegExp(`${COMPILED_OVERWRRITE_TEXT}\s*.*\s*${COMPILED_OVERWRRITE_TEXT}`)
+const COMPILED_OVERWRRITE_TEXT_FOR_REGEXP = `\\/\\/ FOUTER__COMPILED__OVERWRITE_THIS \\\\\\\\`;
+const COMPILED_OVERWRITE_TEXT_REGEXP = new RegExp(`${COMPILED_OVERWRRITE_TEXT_FOR_REGEXP}\\s*([\\w\\W]*)\\s*${COMPILED_OVERWRRITE_TEXT_FOR_REGEXP}`, "gi")
+
+type Route = Record<string, {
+  file: string,
+  parent: string,
+  method: string,
+  path: string,
+  return: string,
+  arguments: { [key: string]: { [key: string]: string } }
+}>;
 
 export class Compiler {
   private readonly _file_manager: FileManager;
@@ -41,42 +51,35 @@ export class Compiler {
     this.Write(this.ReadFiles().map(file => this.ResolveFile(...file)));
   }
 
-  private Write(routes: {
-      [key: string]: {
-        file: string,
-        method: string,
-        path: string,
-        return: string,
-        arguments: { [key: string]: { [key: string]: string } }
-      }
-    }[]
-  ) {
-    const string = COMPILED_OVERWRRITE_TEXT + "\n\ntype Routes = " + routes.map(route => this.ResolveRoute(route)).join("\n\n") + "\n\n" + COMPILED_OVERWRRITE_TEXT;
+  private Write(routes: Route[]) {
+    const resolvedRoutes = routes.map(route => this.ResolveRoute(route)).reduce((previousRoute, currentRoute) => Object.assign(previousRoute, currentRoute));
+    const parsedRoutes = JSON.stringify(resolvedRoutes, undefined, 2).replaceAll("\"", "").replaceAll("'", "\"").replaceAll("},\n", "},\n\n");
+    const string = COMPILED_OVERWRRITE_TEXT + "\n\ntype Routes = " + parsedRoutes + "\n\n" + COMPILED_OVERWRRITE_TEXT;
     
     if (this.replace || (!existsSync(this.outputFile)) || FileManager.readFile(this.outputFile) === "") {
       FileManager.writeFile(string, this.outputFile);
     } else {
-      FileManager.writeFile(FileManager.readFile(this.outputFile).replaceAll(COMPILED_OVERWRITE_TEXT_REGEXP, string).replaceAll(OVERWRRITE_TEXT, string), this.outputFile);
+      FileManager
+        .writeFile(
+          FileManager
+            .readFile(this.outputFile)
+            .replaceAll(COMPILED_OVERWRITE_TEXT_REGEXP, string)
+            .replaceAll(OVERWRRITE_TEXT, string),
+          this.outputFile
+        );
     }
   }
 
-  private ResolveRoute(route: {
-    [key: string]: {
-      file: string,
-      method: string,
-      path: string,
-      return: string,
-      arguments: { [key: string]: { [key: string]: string } }
-    }
-  }) {
-    return JSON.stringify(Object.fromEntries(Object.values(route).map(data => {
+  private ResolveRoute(route: Route) {
+    return Object.fromEntries(Object.values(route).filter(data => !!data).map(data => {
       return [`'${data.method + " " + data.file + data.path}'`, {
         method: `'${data.method}'`,
         path: `'${data.path}'`,
+        parent: `'${data.parent}'`,
         return: data.return,
         arguments: data.arguments
       }];
-    })), undefined, 2).replaceAll("\"", "").replaceAll("'", "\"").replaceAll("},\n", "},\n\n");
+    }));
   }
 
   private ResolveArgumentData(argument: string) {
@@ -136,22 +139,17 @@ export class Compiler {
         return [];
       };
 
+      const file = FileManager.getFileName(filePath);
+
       return [`${method} ${path}`, {
-        file: FileManager.getFileName(filePath),
+        file,
         method,
         path,
+        parent: file,
         return: returnType,
         arguments: this.ResolveArguments([first, second, third])
-      } as const] as const
-    })) as {
-      [key: string]: {
-        file: string,
-        method: string,
-        path: string,
-        return: string,
-        arguments: { [key: string]: { [key: string]: string } }
-      }
-    };
+      } as Route[string]] as const
+    })) as Route;
   }
 
   private ReadFiles() {
