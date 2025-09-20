@@ -79,19 +79,15 @@ export class Compiler {
     };
   }
 
-  private Write(routes: Route[]) {
-    const parsedRoutes = JSON.stringify(this.ResolveRoutes(routes), undefined, 2).replaceAll("\"", "").replaceAll("'", "\"").replaceAll("},\n", "},\n\n");
-
-    return this.write()(parsedRoutes);
+  public resolvePartial(name: string, maybePartial: string) {
+    return maybePartial.endsWith("?")
+      ? [name + "?", maybePartial.slice(0, maybePartial.length-1)] as const
+      : [name, maybePartial] as const;
   }
 
-  private ResolveRoutes(routes: Route[]) {
-    return routes.map(route => this.ResolveRoute(route)).reduce((previous, current) => Object.assign(previous, current));
-  }
-
-  private ResolveRoute(route: Route) {
+  public resolveRoute(route: Route) {
     return Object.fromEntries(Object.values(route).filter(data => !!data).map(data => {
-      const returnData = this.ResolvePartial("return", data.return);
+      const returnData = this.resolvePartial("return", data.return);
 
       return [`'${data.method + " " + data.parent + data.path}'`, {
         method: `'${data.method}'`,
@@ -101,6 +97,16 @@ export class Compiler {
         arguments: data.arguments
       }];
     }));
+  }
+
+  private Write(routes: Route[]) {
+    const parsedRoutes = JSON.stringify(this.ResolveRoutes(routes), undefined, 2).replaceAll("\"", "").replaceAll("'", "\"").replaceAll("},\n", "},\n\n");
+
+    return this.write()(parsedRoutes);
+  }
+
+  private ResolveRoutes(routes: Route[]) {
+    return routes.map(route => this.resolveRoute(route)).reduce((previous, current) => Object.assign(previous, current));
   }
 
   private ResolveArgumentData(argument: string) {
@@ -122,7 +128,7 @@ export class Compiler {
 
       const [ _main, dataName, dataType ] = dataMatched;
 
-      return this.ResolvePartial(dataName, dataType);
+      return this.resolvePartial(dataName, dataType);
     }).filter(v => v.length !== 0)) as { [key: string]: string };
   }
 
@@ -151,7 +157,7 @@ export class Compiler {
         delete additionObject[argumentType + "?"];
 
         return typeof argumentData === "string"
-          ? this.ResolvePartial(argumentType, argumentData)
+          ? this.resolvePartial(argumentType, argumentData)
           : [argumentType, argumentData] as const
       }).filter(v => v.length !== 0)) as Route[string]["arguments"],
       ...additionObject
@@ -197,12 +203,6 @@ export class Compiler {
   private ReadFiles() {
     return this._file_manager.files.map(file =>
       [FileManager.readFile(this._file_manager.resolvePath(file)), file] as const);
-  }
-
-  private ResolvePartial(name: string, maybePartial: string) {
-    return maybePartial.endsWith("?")
-      ? [name + "?", maybePartial.slice(0, maybePartial.length-1)] as const
-      : [name, maybePartial] as const;
   }
 };
 
